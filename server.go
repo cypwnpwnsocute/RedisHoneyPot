@@ -18,21 +18,14 @@ var (
 	err error
 )
 
-type History struct {
-	Addr    string
-	History []string
-}
-
 type RedisServer struct {
 	server  *gev.Server
 	hashmap *hashmap.Map
-	History map[string]map[string][]string
 }
 
 func NewRedisServer(address string, proto string, loopsnum int) (server *RedisServer, err error) {
 	Serv := new(RedisServer)
 	Serv.hashmap = hashmap.New()
-	Serv.History = make(map[string]map[string][]string)
 	Serv.server, err = gev.NewServer(Serv,
 		gev.Address(address),
 		gev.Network(proto),
