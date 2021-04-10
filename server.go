@@ -60,7 +60,7 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	case "":
 		return
 	default:
-		out = []byte("-ERR wrong number of arguments for " + cmd.Name() + " command\r\n")
+		out = []byte("-ERR unknown command " + cmd.Name() + "\r\n")
 		return
 	}
 	return
