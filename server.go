@@ -18,14 +18,21 @@ var (
 	err error
 )
 
+type History struct {
+	Addr    string
+	History []string
+}
+
 type RedisServer struct {
 	server  *gev.Server
 	hashmap *hashmap.Map
+	History map[string]map[string][]string
 }
 
 func NewRedisServer(address string, proto string, loopsnum int) (server *RedisServer, err error) {
 	Serv := new(RedisServer)
 	Serv.hashmap = hashmap.New()
+	Serv.History = make(map[string]map[string][]string)
 	Serv.server, err = gev.NewServer(Serv,
 		gev.Address(address),
 		gev.Network(proto),
@@ -46,7 +53,7 @@ func (s *RedisServer) Stop() {
 }
 
 func (s *RedisServer) OnConnect(c *connection.Connection) {
-	log.Println(" New connection from : ： ", c.PeerAddr())
+	log.Println(" New connection from : ", c.PeerAddr())
 }
 
 func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data []byte) (out []byte) {
@@ -57,6 +64,7 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 		out = data
 	}
 	com := strings.ToLower(cmd.Name())
+	log.Print(c.PeerAddr(), " ------ ", strings.Join(cmd.Args, " "))
 	switch com {
 	case "ping":
 		out = []byte("+PONG\r\n")
@@ -69,7 +77,6 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 			s.hashmap.Put(cmd.Args[1], cmd.Args[2])
 			out = []byte("+OK\r\n")
 		}
-
 	case "get":
 		if len(cmd.Args) != 2 {
 			out = []byte("-ERR wrong number of arguments for '" + cmd.Args[0] + "' command\r\n")
@@ -81,7 +88,6 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 				out = []byte("+(nil)\r\n")
 			}
 		}
-
 	case "del":
 		if len(cmd.Args) < 2 {
 			out = []byte("-ERR wrong number of arguments for '" + cmd.Args[0] + "' command\r\n")
