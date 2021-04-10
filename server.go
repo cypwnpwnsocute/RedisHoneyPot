@@ -63,39 +63,61 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	case "info":
 
 	case "set":
-		s.hashmap.Put(cmd.Args[1], cmd.Args[2])
-		out = []byte("+OK\r\n")
+		if len(cmd.Args) < 3 {
+			out = []byte("-ERR wrong number of arguments for '" + cmd.Args[0] + "' command\r\n")
+		} else {
+			s.hashmap.Put(cmd.Args[1], cmd.Args[2])
+			out = []byte("+OK\r\n")
+		}
+
 	case "get":
-		v, bool := s.hashmap.Get(cmd.Args[1])
-		if bool == true {
-			out = []byte("+" + v.(string) + "\r\n")
+		if len(cmd.Args) != 2 {
+			out = []byte("-ERR wrong number of arguments for '" + cmd.Args[0] + "' command\r\n")
 		} else {
-			out = []byte("+(nil)\r\n")
-		}
-	case "del":
-		s.hashmap.Remove(cmd.Args[1])
-		out = []byte("+(integer) 1\r\n")
-	case "exists":
-		_, bool := s.hashmap.Get(cmd.Args[1])
-		if bool == true {
-			out = []byte("+(integer) 1\r\n")
-		} else {
-			out = []byte("+(integer) 0\r\n")
-		}
-	case "keys":
-		if cmd.Args[1] == "*" {
-			str := "*" + strconv.Itoa(s.hashmap.Size()) + "\r\n"
-			for _, v := range s.hashmap.Keys() {
-				str += "$" + strconv.Itoa(len(v.(string))) + "\r\n" + v.(string) + "\r\n"
+			v, bool := s.hashmap.Get(cmd.Args[1])
+			if bool == true {
+				out = []byte("+" + v.(string) + "\r\n")
+			} else {
+				out = []byte("+(nil)\r\n")
 			}
-			out = []byte(str)
+		}
+
+	case "del":
+		if len(cmd.Args) < 2 {
+			out = []byte("-ERR wrong number of arguments for '" + cmd.Args[0] + "' command\r\n")
+		} else {
+			s.hashmap.Remove(cmd.Args[1])
+			out = []byte("+(integer) 1\r\n")
+		}
+	case "exists":
+		if len(cmd.Args) < 2 {
+			out = []byte("-ERR wrong number of arguments for '" + cmd.Args[0] + "' command\r\n")
 		} else {
 			_, bool := s.hashmap.Get(cmd.Args[1])
 			if bool == true {
-				l := strconv.Itoa(len(cmd.Args[1]))
-				out = []byte("*1\r\n$" + l + "\r\n" + cmd.Args[1] + "\r\n")
+				out = []byte("+(integer) 1\r\n")
 			} else {
-				out = []byte("+(empty array)\r\n")
+				out = []byte("+(integer) 0\r\n")
+			}
+		}
+	case "keys":
+		if len(cmd.Args) != 2 {
+			out = []byte("-ERR wrong number of arguments for '" + cmd.Args[0] + "' command\r\n")
+		} else {
+			if cmd.Args[1] == "*" {
+				str := "*" + strconv.Itoa(s.hashmap.Size()) + "\r\n"
+				for _, v := range s.hashmap.Keys() {
+					str += "$" + strconv.Itoa(len(v.(string))) + "\r\n" + v.(string) + "\r\n"
+				}
+				out = []byte(str)
+			} else {
+				_, bool := s.hashmap.Get(cmd.Args[1])
+				if bool == true {
+					l := strconv.Itoa(len(cmd.Args[1]))
+					out = []byte("*1\r\n$" + l + "\r\n" + cmd.Args[1] + "\r\n")
+				} else {
+					out = []byte("+(empty array)\r\n")
+				}
 			}
 		}
 	case "flushall":
@@ -109,6 +131,8 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	case "dbsize":
 		l := strconv.Itoa(s.hashmap.Size())
 		out = []byte("+(integer) " + l + "\r\n")
+	case "config":
+
 	default:
 		out = []byte("-ERR unknown command `" + cmd.Name() + "`, with args beginning with:\r\n")
 	}
