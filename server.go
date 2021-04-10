@@ -10,6 +10,8 @@ import (
 	"github.com/emirpasic/gods/maps/hashmap"
 	"github.com/walu/resp"
 	"log"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -54,7 +56,8 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	if err != nil {
 		out = data
 	}
-	switch cmd.Name() {
+	com := strings.ToLower(cmd.Name())
+	switch com {
 	case "ping":
 		out = []byte("+PONG\r\n")
 	case "info":
@@ -72,8 +75,42 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	case "del":
 		s.hashmap.Remove(cmd.Args[1])
 		out = []byte("+(integer) 1\r\n")
+	case "exists":
+		_, bool := s.hashmap.Get(cmd.Args[1])
+		if bool == true {
+			out = []byte("+(integer) 1\r\n")
+		} else {
+			out = []byte("+(integer) 0\r\n")
+		}
+	case "keys":
+		if cmd.Args[1] == "*" {
+			str := "*" + strconv.Itoa(s.hashmap.Size()) + "\r\n"
+			for _, v := range s.hashmap.Keys() {
+				str += "$" + strconv.Itoa(len(v.(string))) + "\r\n" + v.(string) + "\r\n"
+			}
+			out = []byte(str)
+		} else {
+			_, bool := s.hashmap.Get(cmd.Args[1])
+			if bool == true {
+				l := strconv.Itoa(len(cmd.Args[1]))
+				out = []byte("*1\r\n$" + l + "\r\n" + cmd.Args[1] + "\r\n")
+			} else {
+				out = []byte("+(empty array)\r\n")
+			}
+		}
+	case "flushall":
+		out = []byte("+OK\r\n")
+	case "flushdb":
+		out = []byte("+OK\r\n")
+	case "save":
+		out = []byte("+OK\r\n")
+	case "select":
+		out = []byte("+OK\r\n")
+	case "dbsize":
+		l := strconv.Itoa(s.hashmap.Size())
+		out = []byte("+(integer) " + l + "\r\n")
 	default:
-		out = []byte("-ERR unknown command " + cmd.Name() + "\r\n")
+		out = []byte("-ERR unknown command `" + cmd.Name() + "`, with args beginning with:\r\n")
 	}
 	return
 }
