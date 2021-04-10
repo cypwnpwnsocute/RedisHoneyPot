@@ -4,8 +4,10 @@
 package main
 
 import (
+	"bytes"
 	"github.com/Allenxuxu/gev"
 	"github.com/Allenxuxu/gev/connection"
+	"github.com/walu/resp"
 	"log"
 )
 
@@ -44,7 +46,23 @@ func (s *RedisServer) OnConnect(c *connection.Connection) {
 
 func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data []byte) (out []byte) {
 	out = data
-	log.Println(string(out))
+	command := bytes.NewReader(data)
+	cmd, err := resp.ReadCommand(command)
+	if err != nil {
+		out = data
+	}
+	switch cmd.Name() {
+	case "ping":
+		out = []byte("+PONG\r\n")
+		return
+	case "info":
+		return
+	case "":
+		return
+	default:
+		out = []byte("-ERR wrong number of arguments for " + cmd.Name() + " command\r\n")
+		return
+	}
 	return
 }
 
