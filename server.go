@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"github.com/Allenxuxu/gev"
 	"github.com/Allenxuxu/gev/connection"
+	"github.com/emirpasic/gods/maps/hashmap"
 	"github.com/walu/resp"
 	"log"
 )
@@ -16,11 +17,13 @@ var (
 )
 
 type RedisServer struct {
-	server *gev.Server
+	server  *gev.Server
+	hashmap *hashmap.Map
 }
 
 func NewRedisServer(address string, proto string, loopsnum int) (server *RedisServer, err error) {
 	Serv := new(RedisServer)
+	Serv.hashmap = hashmap.New()
 	Serv.server, err = gev.NewServer(Serv,
 		gev.Address(address),
 		gev.Network(proto),
@@ -41,7 +44,7 @@ func (s *RedisServer) Stop() {
 }
 
 func (s *RedisServer) OnConnect(c *connection.Connection) {
-	log.Println(" OnConnect ： ", c.PeerAddr())
+	log.Println(" New connection from : ： ", c.PeerAddr())
 }
 
 func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data []byte) (out []byte) {
@@ -54,14 +57,23 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	switch cmd.Name() {
 	case "ping":
 		out = []byte("+PONG\r\n")
-		return
 	case "info":
-		return
-	case "":
-		return
+
+	case "set":
+		s.hashmap.Put(cmd.Args[1], cmd.Args[2])
+		out = []byte("+OK\r\n")
+	case "get":
+		v, bool := s.hashmap.Get(cmd.Args[1])
+		if bool == true {
+			out = []byte("+" + v.(string) + "\r\n")
+		} else {
+			out = []byte("+(nil)\r\n")
+		}
+	case "del":
+		s.hashmap.Remove(cmd.Args[1])
+		out = []byte("+(integer) 1\r\n")
 	default:
 		out = []byte("-ERR unknown command " + cmd.Name() + "\r\n")
-		return
 	}
 	return
 }
