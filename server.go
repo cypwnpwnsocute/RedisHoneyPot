@@ -9,6 +9,7 @@ import (
 	"github.com/Allenxuxu/gev"
 	"github.com/Allenxuxu/gev/connection"
 	"github.com/emirpasic/gods/maps/hashmap"
+	"github.com/sirupsen/logrus"
 	"github.com/walu/resp"
 	"gopkg.in/ini.v1"
 	"strconv"
@@ -19,12 +20,17 @@ type RedisServer struct {
 	server  *gev.Server
 	hashmap *hashmap.Map
 	Config  *ini.File
+	log     *logrus.Logger
 }
 
 func NewRedisServer(address string, proto string, loopsnum int) (server *RedisServer, err error) {
 	Serv := new(RedisServer)
 	Serv.hashmap = hashmap.New()
 	config, err := LoadConfig("redis.conf")
+	Serv.log = logrus.New()
+	Serv.log.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +55,10 @@ func (s *RedisServer) Stop() {
 }
 
 func (s *RedisServer) OnConnect(c *connection.Connection) {
-	log.Println(" New connection from : ", c.PeerAddr())
+	s.log.WithFields(logrus.Fields{
+		"action": "NewConnect",
+		"addr":   c.PeerAddr(),
+	}).Println()
 }
 
 func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data []byte) (out []byte) {
@@ -59,8 +68,14 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	if err != nil {
 		out = data
 	}
+
 	com := strings.ToLower(cmd.Name())
-	log.Print(c.PeerAddr(), " ------ ", strings.Join(cmd.Args, " "))
+
+	s.log.WithFields(logrus.Fields{
+		"action": strings.Join(cmd.Args, " "),
+		"addr":   c.PeerAddr(),
+	}).Println()
+
 	switch com {
 	case "ping":
 		out = []byte("+PONG\r\n")
@@ -169,5 +184,8 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 }
 
 func (s *RedisServer) OnClose(c *connection.Connection) {
-	log.Println(c.PeerAddr(), "Closed")
+	s.log.WithFields(logrus.Fields{
+		"action": "Closed",
+		"addr":   c.PeerAddr(),
+	}).Println()
 }

@@ -8,7 +8,7 @@ import "gopkg.in/ini.v1"
 func LoadConfig(filename string) (cfg *ini.File, err error) {
 	cfg, err = ini.LoadSources(ini.LoadOptions{
 		SkipUnrecognizableLines: true,
-	}, "redis.conf")
+	}, filename)
 	if err != nil {
 		return nil, err
 	} else {
