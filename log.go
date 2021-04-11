@@ -35,7 +35,7 @@ func GetLoggerInstance() *logrus.Logger {
 }
 
 func configLocalFilesystemLogger(logPath string, logFileName string, maxAge time.Duration, rotationTime time.Duration) *logrus.Logger {
-	filePath, err := CreateDir(logPath)
+	filePath, err := createDir(logPath)
 	baseLogPath := path.Join(filePath, logFileName)
 	CheckError(err)
 	logFilePath := baseLogPath + ".%Y%m%d%H%M"
@@ -68,7 +68,6 @@ func configLocalFilesystemLogger(logPath string, logFileName string, maxAge time
 
 func CheckError(err error) {
 	if err != nil {
-		log := GetLoggerInstance()
 		log.Error(err)
 	}
 }
@@ -81,7 +80,7 @@ func CheckFileIsExist(filename string) bool {
 	return exist
 }
 
-func CreateDir(path string) (directPath string, err error) {
+func createDir(path string) (directPath string, err error) {
 	absPath, err := os.Getwd()
 	if err != nil {
 		log.Panicln(err)
