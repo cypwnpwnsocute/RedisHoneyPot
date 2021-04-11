@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="8f2db964-c838-4ee0-815e-278cd93d28d8" name="Default Changelist" comment="update slaveof command">
+    <list default="true" id="8f2db964-c838-4ee0-815e-278cd93d28d8" name="Default Changelist" comment="update README.md">
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -58,6 +58,7 @@
     <MESSAGE value="update server.go" />
     <MESSAGE value="update log module" />
     <MESSAGE value="update slaveof command" />
-    <option name="LAST_COMMIT_MESSAGE" value="update slaveof command" />
+    <MESSAGE value="update README.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="update README.md" />
   </component>
 </project>
