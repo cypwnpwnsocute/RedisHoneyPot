@@ -1,16 +1,16 @@
-// @Title  main.go
+// @Title  server.go
 // @Description A highly interactive honeypot supporting redis protocol
 // @Author  Cy 2021.04.08
 package main
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/Allenxuxu/gev"
 	"github.com/Allenxuxu/gev/connection"
 	"github.com/emirpasic/gods/maps/hashmap"
 	"github.com/walu/resp"
 	"gopkg.in/ini.v1"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -65,7 +65,11 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	case "ping":
 		out = []byte("+PONG\r\n")
 	case "info":
-
+		info := ""
+		for _, key := range s.Config.Section("info").KeyStrings() {
+			info += fmt.Sprintf("%s:%s\r\n", key, s.Config.Section("info").Key(key))
+		}
+		out = []byte("$" + strconv.Itoa(len(info)) + "\r\n" + info + "\r\n")
 	case "set":
 		if len(cmd.Args) < 3 {
 			out = []byte("-ERR wrong number of arguments for '" + cmd.Args[0] + "' command\r\n")
