@@ -177,6 +177,12 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 		} else {
 			out = []byte("-ERR Unknown subcommand or wrong number of arguments for 'get'. Try CONFIG HELP.\r\n")
 		}
+	case "slaveof":
+		if len(cmd.Args) < 3 {
+			out = []byte("-ERR wrong number of arguments for 'slaveof' command\r\n")
+		} else {
+			out = []byte("+OK\r\n")
+		}
 	default:
 		out = []byte("-ERR unknown command `" + cmd.Name() + "`, with args beginning with:\r\n")
 	}
