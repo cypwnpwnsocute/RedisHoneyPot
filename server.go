@@ -66,7 +66,7 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	command := bytes.NewReader(data)
 	cmd, err := resp.ReadCommand(command)
 	if err != nil {
-		out = data
+		return
 	}
 
 	com := strings.ToLower(cmd.Name())
