@@ -1,5 +1,5 @@
 // @Title  server.go
-// @Description A highly interactive honeypot supporting redis protocol
+// @Description High Interaction Honeypot Solution for Redis protocol
 // @Author  Cy 2021.04.08
 package main
 
@@ -63,6 +63,9 @@ func (s *RedisServer) OnConnect(c *connection.Connection) {
 
 func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data []byte) (out []byte) {
 	command := bytes.NewReader(data)
+	if command.Len() == 2 {
+		return
+	}
 	cmd, err := resp.ReadCommand(command)
 	if err != nil {
 		return
